@@ -1,0 +1,22 @@
+{
+  "name": "shop-typescript",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm --workspace=apps/backend run dev",
+    "dev:frontend": "npm --workspace=apps/frontend run dev",
+    "build:backend": "npm --workspace=apps/backend run build",
+    "build:frontend": "npm --workspace=apps/frontend run build",
+    "build": "npm run build --workspaces",
+    "test": "npm --workspace=apps/backend test",
+    "seed": "npm --workspace=apps/backend run seed",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  },
+  "keywords": ["ecommerce", "typescript", "nextjs", "express", "prisma", "heroui", "postgresql"],
+  "author": "",
+  "license": "MIT"
+}
