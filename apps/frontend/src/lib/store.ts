@@ -63,10 +63,12 @@ export const useCartStore = create<CartState>()(
       items: [],
       isHydrated: false,
       addItem: (product, quantity = 1) => {
+        if (product.stock <= 0 || quantity <= 0) return;
         const items = get().items;
         const exist = items.find((i) => i.product.id === product.id);
         const newQty = exist ? exist.quantity + quantity : quantity;
         const validQty = Math.min(newQty, product.stock); // Nie mehr als verfügbar
+        if (validQty <= 0) return;
         if (exist) {
           set({ items: items.map((i) => i.product.id === product.id ? { ...i, quantity: validQty } : i) });
         } else {
@@ -76,7 +78,9 @@ export const useCartStore = create<CartState>()(
       updateQuantity: (id, qty) => {
         if (qty <= 0) return get().removeItem(id);
         const item = get().items.find((i) => i.product.id === id);
-        const validQty = item ? Math.min(qty, item.product.stock) : qty;
+        if (!item) return;
+        const validQty = Math.min(qty, item.product.stock);
+        if (validQty <= 0) return get().removeItem(id);
         set({ items: get().items.map((i) => i.product.id === id ? { ...i, quantity: validQty } : i) });
       },
       removeItem: (id) => set({ items: get().items.filter((i) => i.product.id !== id) }),

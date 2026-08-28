@@ -58,6 +58,9 @@ authRouter.post('/login', async (req, res, next) => {
 authRouter.get('/me', auth(), async (req, res, next) => {
   try {
     const user = await db.user.findUnique({ where: { id: req.user!.id }, select: { id: true, name: true, email: true, role: true } });
+    if (!user) {
+      return res.status(401).json({ status: 'fail', message: 'Benutzer existiert nicht mehr.' });
+    }
     res.json({ status: 'success', data: { user } });
   } catch (e) { next(e); }
 });

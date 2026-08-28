@@ -21,7 +21,12 @@ export default function ProductDetailPage() {
   const addItem = useCartStore((s) => s.addItem);
 
   useEffect(() => {
-    if (id) api.get<{ data: { product: Product } }>(`/products/${id}`).then((r) => setProduct(r.data.product)).finally(() => setLoading(false));
+    if (id) {
+      api.get<{ data: { product: Product } }>(`/products/${id}`)
+        .then((r) => setProduct(r.data.product))
+        .catch(() => setProduct(null))
+        .finally(() => setLoading(false));
+    }
   }, [id]);
 
   if (loading) return <div className="max-w-4xl mx-auto p-12 grid md:grid-cols-2 gap-8"><Skeleton className="h-72 rounded-2xl" /><div className="space-y-3"><Skeleton className="h-6 w-1/3" /><Skeleton className="h-10 w-2/3" /><Skeleton className="h-20" /></div></div>;

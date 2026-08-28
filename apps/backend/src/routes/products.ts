@@ -63,6 +63,9 @@ productsRouter.patch('/:id/stock', auth([Role.EMPLOYEE, Role.ADMIN]), async (req
 // Nur Admin darf Produkte löschen
 productsRouter.delete('/:id', auth([Role.ADMIN]), async (req, res, next) => {
   try {
+    const prod = await db.product.findUnique({ where: { id: req.params.id } });
+    if (!prod) return res.status(404).json({ status: 'fail', message: 'Produkt nicht gefunden.' });
+
     const hasOrders = await db.orderItem.findFirst({ where: { productId: req.params.id } });
     if (hasOrders) await db.product.update({ where: { id: req.params.id }, data: { isActive: false } });
     else await db.product.delete({ where: { id: req.params.id } });

@@ -21,6 +21,11 @@ usersRouter.get('/', auth([Role.ADMIN]), async (_, res, next) => {
 usersRouter.patch('/:id/role', auth([Role.ADMIN]), async (req, res, next) => {
   try {
     const role = z.nativeEnum(Role).parse(req.body.role);
+
+    if (req.params.id === req.user?.id && role !== Role.ADMIN) {
+      return res.status(400).json({ status: 'fail', message: 'Administratoren können ihre eigene Rolle nicht entziehen.' });
+    }
+
     const user = await db.user.update({
       where: { id: req.params.id },
       data: { role },

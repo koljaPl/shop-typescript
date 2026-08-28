@@ -24,7 +24,7 @@ ordersRouter.post('/checkout', async (req, res, next) => {
     }
 
     const order = await db.$transaction(async (tx) => {
-      let totalAmount = 0;
+      let subtotal = 0;
       const orderItems = [];
 
       for (const item of items) {
@@ -41,9 +41,12 @@ ordersRouter.post('/checkout', async (req, res, next) => {
           throw new Error(`Nicht genügend Bestand für "${prod.name}". Verfügbar: ${prod.stock}, Angefordert: ${item.quantity}`);
         }
 
-        totalAmount += Number(prod.price) * item.quantity;
+        subtotal += Number(prod.price) * item.quantity;
         orderItems.push({ productId: item.productId, quantity: item.quantity, unitPrice: prod.price });
       }
+
+      const shipping = subtotal >= 100 ? 0 : 4.90;
+      const totalAmount = Number((subtotal + shipping).toFixed(2));
 
       return tx.order.create({
         data: { userId, totalAmount, status: 'PAID', items: { create: orderItems } },
@@ -53,6 +56,7 @@ ordersRouter.post('/checkout', async (req, res, next) => {
 
     res.status(201).json({ status: 'success', message: 'Kauf abgeschlossen!', data: { order } });
   } catch (e: any) {
+    if (e.message?.includes('nicht verfügbar')) return res.status(404).json({ status: 'fail', message: e.message });
     if (e.message?.includes('Nicht genügend Bestand')) return res.status(409).json({ status: 'fail', message: e.message });
     next(e);
   }

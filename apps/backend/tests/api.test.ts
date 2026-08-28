@@ -13,6 +13,7 @@ const HEALTH_URL = 'http://localhost:5000/health';
 describe('TechShop API & RBAC Test-Suite', () => {
   let serverProcess: ChildProcess | null = null;
   let adminToken = '';
+  let adminId = '';
   let employeeToken = '';
   let customerToken = '';
   let testProductId = '';
@@ -56,6 +57,7 @@ describe('TechShop API & RBAC Test-Suite', () => {
     const aData = await aRes.json();
     assert.equal(aRes.status, 200);
     adminToken = aData.data.token;
+    adminId = aData.data.user.id;
 
     // 3. Mitarbeiter Login
     const eRes = await fetch(`${BASE_URL}/auth/login`, {
@@ -235,6 +237,25 @@ describe('TechShop API & RBAC Test-Suite', () => {
     });
   });
 
+  test('RBAC: Admin DARF SICH SELBST NICHT degradieren (400)', async () => {
+    const patchRes = await fetch(`${BASE_URL}/users/${adminId}/role`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ role: 'CUSTOMER' }),
+    });
+    assert.equal(patchRes.status, 400);
+    const json = await patchRes.json();
+    assert.match(json.message, /nicht entziehen/);
+  });
+
+  test('Produkte: Löschen eines nicht existierenden Produkts liefert 404 (nicht 500)', async () => {
+    const res = await fetch(`${BASE_URL}/products/nicht-vorhandene-id`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    assert.equal(res.status, 404);
+  });
+
   // --- 4. ATOMARER CHECKOUT & LAGERBESTAND ---
   test('Checkout: Ausverkaufter Artikel wird atomar mit 409 Conflict abgewiesen', async () => {
     const prods = (await (await fetch(`${BASE_URL}/products`)).json()).data.products;
@@ -249,6 +270,31 @@ describe('TechShop API & RBAC Test-Suite', () => {
     assert.equal(res.status, 409);
     const json = await res.json();
     assert.match(json.message, /Nicht genügend Bestand/);
+  });
+
+  test('Checkout: Ungültige Produkt-ID liefert 404 (nicht 500)', async () => {
+    const res = await fetch(`${BASE_URL}/orders/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: [{ productId: 'ungueltige-produkt-id', quantity: 1 }] }),
+    });
+    assert.equal(res.status, 404);
+  });
+
+  test('Checkout: Versandkosten von 4.90 € werden bei Bestellwert unter 100 € berechnet', async () => {
+    const prods = (await (await fetch(`${BASE_URL}/products`)).json()).data.products;
+    const itemUnder100 = prods.find((p: any) => Number(p.price) < 100 && p.stock > 0);
+    assert.ok(itemUnder100);
+
+    const res = await fetch(`${BASE_URL}/orders/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: [{ productId: itemUnder100.id, quantity: 1 }] }),
+    });
+    assert.equal(res.status, 201);
+    const json = await res.json();
+    const expected = Number((Number(itemUnder100.price) + 4.90).toFixed(2));
+    assert.equal(Number(json.data.order.totalAmount), expected);
   });
 
   test('Checkout: Gültiger Kauf zieht Bestand atomar ab (201)', async () => {

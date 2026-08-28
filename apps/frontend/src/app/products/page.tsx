@@ -30,6 +30,7 @@ function ProductsContent() {
   useEffect(() => {
     api.get<{ data: { products: Product[] } }>('/products')
       .then((res) => setProducts(res.data.products))
+      .catch(() => setProducts([]))
       .finally(() => setLoading(false));
   }, []);
 
