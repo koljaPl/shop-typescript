@@ -85,4 +85,3 @@ npm --prefix apps/frontend run dev
 * **Frontend:** [http://localhost:3001](http://localhost:3001)
 * **Backend API:** [http://localhost:5000/api/v1](http://localhost:5000/api/v1)
 * **Healthcheck:** [http://localhost:5000/health](http://localhost:5000/health)
-*
