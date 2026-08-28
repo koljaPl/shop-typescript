@@ -2,8 +2,6 @@
 
 Ein schlanker, pragmatischer und produktionsreifer Online-Shop mit **Next.js 14**, **HeroUI**, **Express.js**, **TypeScript**, **Prisma ORM** und **PostgreSQL**.
 
-Das gesamte Projekt umfasst nur **~1.470 Zeilen Code** für das komplette Frontend und Backend bei vollem Funktionsumfang.
-
 ---
 
 ## 1. Projektstruktur & Architektur
@@ -61,30 +59,30 @@ Das Standard-Passwort für alle Konten lautet: `Password123!`
 
 ---
 
-## 4. Schnellstart & Docker (1 Befehl)
+## 4. Schnellstart
 
-Das gesamte System (PostgreSQL 17, Backend & Frontend) startet mit **einem einzigen Befehl**:
-
+### Docker Container starten
 ```bash
-docker compose up --build -d
+docker compose up --build
+```
+
+### PostgreSQL & Backend starten
+```bash
+# Datenbank & Seeding
+npm --prefix apps/backend run prisma:push
+npm --prefix apps/backend run seed
+
+# Backend starten (Port 5000)
+npm --prefix apps/backend run dev
+```
+
+### Frontend starten
+```bash
+# Frontend starten (Port 3001)
+npm --prefix apps/frontend run dev
 ```
 
 * **Frontend:** [http://localhost:3001](http://localhost:3001)
 * **Backend API:** [http://localhost:5000/api/v1](http://localhost:5000/api/v1)
 * **Healthcheck:** [http://localhost:5000/health](http://localhost:5000/health)
-
-Zum Beenden:
-```bash
-docker compose down
-```
-
----
-
-## 5. Automatisierte Tests ausführen
-
-Die integrierte Test-Suite prüft Authentifizierung, Zod-Validierung, 3-Stufen-RBAC und atomaren Checkout:
-
-```bash
-npm test
-```
-*Ergebnis: 16 von 16 Tests bestanden (Dauer < 1 Sekunde).*
+*
