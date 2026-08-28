@@ -1,6 +1,6 @@
 'use client';
 
-// Produktkatalog mit minimalistischen Filtern und Sortierung
+// Produktkatalog mit minimalistischen Filtern, Sortierung und Dark Mode
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Input, Skeleton } from '@heroui/react';
@@ -62,14 +62,14 @@ function ProductsContent() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
       {/* Titel & Status */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-2 border-b border-zinc-200 pb-4">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
-          <span className="text-[11px] font-mono tracking-widest text-zinc-400 uppercase">Sortiment</span>
-          <h1 className="text-3xl font-black tracking-tight text-zinc-950">
+          <span className="text-[11px] font-mono tracking-widest text-zinc-400 dark:text-zinc-500 uppercase">Sortiment</span>
+          <h1 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-white">
             {selectedCat === 'Alle' ? 'Hardware-Katalog' : `Katalog // ${selectedCat}`}
           </h1>
         </div>
-        <span className="text-xs font-mono text-zinc-500">
+        <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
           {loading ? 'Lade Artikel...' : `${filtered.length} Artikel verfügbar`}
         </span>
       </div>
@@ -84,8 +84,8 @@ function ProductsContent() {
               onClick={() => handleSelectCat(cat)}
               className={`px-3.5 py-1.5 text-xs font-mono rounded-lg transition-all ${
                 selectedCat.toLowerCase() === cat.toLowerCase()
-                  ? 'bg-zinc-900 text-white font-bold shadow-xs'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/80 hover:text-black'
+                  ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 font-bold shadow-xs'
+                  : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:text-black dark:hover:text-white'
               }`}
             >
               {cat}
@@ -109,7 +109,7 @@ function ProductsContent() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="text-xs font-mono bg-zinc-100 border border-zinc-200 rounded-lg px-2.5 py-2 text-zinc-700 hover:border-zinc-400 transition-colors cursor-pointer"
+            className="text-xs font-mono bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2.5 py-2 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors cursor-pointer"
           >
             <option value="default">Sortierung: Standard</option>
             <option value="price-asc">Preis: Aufsteigend</option>
@@ -122,10 +122,10 @@ function ProductsContent() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-80 rounded-2xl border border-zinc-200 p-4 space-y-3">
-              <Skeleton className="rounded-xl h-44 bg-zinc-200" />
-              <Skeleton className="w-2/5 h-3 rounded bg-zinc-200" />
-              <Skeleton className="w-4/5 h-4 rounded bg-zinc-200" />
+            <div key={i} className="h-80 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 space-y-3">
+              <Skeleton className="rounded-xl h-44 bg-zinc-200 dark:bg-zinc-800" />
+              <Skeleton className="w-2/5 h-3 rounded bg-zinc-200 dark:bg-zinc-800" />
+              <Skeleton className="w-4/5 h-4 rounded bg-zinc-200 dark:bg-zinc-800" />
             </div>
           ))}
         </div>
@@ -134,9 +134,9 @@ function ProductsContent() {
           {filtered.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
       ) : (
-        <div className="text-center py-20 border border-dashed border-zinc-200 rounded-2xl bg-zinc-50/50 space-y-2">
-          <p className="font-mono text-sm text-zinc-600">Keine Artikel gefunden.</p>
-          <p className="text-xs text-zinc-400">Passe deine Filterkriterien oder den Suchbegriff an.</p>
+        <div className="text-center py-20 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 space-y-2">
+          <p className="font-mono text-sm text-zinc-600 dark:text-zinc-400">Keine Artikel gefunden.</p>
+          <p className="text-xs text-zinc-400 dark:text-zinc-500">Passe deine Filterkriterien oder den Suchbegriff an.</p>
         </div>
       )}
     </div>
@@ -147,16 +147,16 @@ export default function ProductsPage() {
   return (
     <Suspense fallback={
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
-        <div className="border-b border-zinc-200 pb-4">
+        <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4">
           <span className="text-[11px] font-mono tracking-widest text-zinc-400 uppercase">Sortiment</span>
-          <h1 className="text-3xl font-black tracking-tight text-zinc-950">Hardware-Katalog</h1>
+          <h1 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-white">Hardware-Katalog</h1>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-80 rounded-2xl border border-zinc-200 p-4 space-y-3">
-              <Skeleton className="rounded-xl h-44 bg-zinc-200" />
-              <Skeleton className="w-2/5 h-3 rounded bg-zinc-200" />
-              <Skeleton className="w-4/5 h-4 rounded bg-zinc-200" />
+            <div key={i} className="h-80 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 space-y-3">
+              <Skeleton className="rounded-xl h-44 bg-zinc-200 dark:bg-zinc-800" />
+              <Skeleton className="w-2/5 h-3 rounded bg-zinc-200 dark:bg-zinc-800" />
+              <Skeleton className="w-4/5 h-4 rounded bg-zinc-200 dark:bg-zinc-800" />
             </div>
           ))}
         </div>

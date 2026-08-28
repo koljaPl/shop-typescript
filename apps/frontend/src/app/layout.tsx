@@ -15,11 +15,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de">
+    <html lang="de" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
           <div className="flex flex-col min-h-screen">
-            <Suspense fallback={<div className="h-16 border-b border-zinc-200 bg-white" />}>
+            <Suspense fallback={<div className="h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950" />}>
               <Navbar />
             </Suspense>
             <main className="flex-grow">{children}</main>

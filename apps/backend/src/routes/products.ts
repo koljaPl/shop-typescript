@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Role } from '@prisma/client';
 import { db } from '../lib/db.js';
 import { auth } from '../middleware/auth.js';
+import { logger } from '../lib/logger.js';
 
 export const productsRouter = Router();
 
@@ -40,6 +41,7 @@ productsRouter.post('/', auth([Role.ADMIN]), async (req, res, next) => {
   try {
     const data = productSchema.parse(req.body);
     const product = await db.product.create({ data: { ...data, imageUrl: data.imageUrl || null } });
+    logger.info(`[PRODUCT] Neues Produkt angelegt: "${product.name}" (ID: ${product.id}) durch ${req.user?.email}`);
     res.status(201).json({ status: 'success', data: { product } });
   } catch (e) { next(e); }
 });
@@ -48,7 +50,9 @@ productsRouter.post('/', auth([Role.ADMIN]), async (req, res, next) => {
 productsRouter.put('/:id', auth([Role.EMPLOYEE, Role.ADMIN]), async (req, res, next) => {
   try {
     const data = productSchema.partial().parse(req.body);
-    res.json({ status: 'success', data: { product: await db.product.update({ where: { id: req.params.id }, data }) } });
+    const product = await db.product.update({ where: { id: req.params.id }, data });
+    logger.info(`[PRODUCT] Produkt #${req.params.id} aktualisiert durch ${req.user?.email}`);
+    res.json({ status: 'success', data: { product } });
   } catch (e) { next(e); }
 });
 
@@ -56,7 +60,9 @@ productsRouter.put('/:id', auth([Role.EMPLOYEE, Role.ADMIN]), async (req, res, n
 productsRouter.patch('/:id/stock', auth([Role.EMPLOYEE, Role.ADMIN]), async (req, res, next) => {
   try {
     const stock = z.coerce.number().int().nonnegative().parse(req.body.stock);
-    res.json({ status: 'success', data: { product: await db.product.update({ where: { id: req.params.id }, data: { stock } }) } });
+    const product = await db.product.update({ where: { id: req.params.id }, data: { stock } });
+    logger.info(`[PRODUCT] Lagerbestand für #${req.params.id} auf ${stock} geändert durch ${req.user?.email}`);
+    res.json({ status: 'success', data: { product } });
   } catch (e) { next(e); }
 });
 
@@ -69,6 +75,7 @@ productsRouter.delete('/:id', auth([Role.ADMIN]), async (req, res, next) => {
     const hasOrders = await db.orderItem.findFirst({ where: { productId: req.params.id } });
     if (hasOrders) await db.product.update({ where: { id: req.params.id }, data: { isActive: false } });
     else await db.product.delete({ where: { id: req.params.id } });
+    logger.info(`[PRODUCT] Produkt #${req.params.id} ("${prod.name}") gelöscht/archiviert durch ${req.user?.email}`);
     res.status(204).send();
   } catch (e) { next(e); }
 });

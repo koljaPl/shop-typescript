@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { db } from '../lib/db.js';
 import { JWT_SECRET } from '../lib/config.js';
 import { AuthUser } from '../middleware/auth.js';
+import { logger } from '../lib/logger.js';
 
 export const ordersRouter = Router();
 
@@ -54,6 +55,7 @@ ordersRouter.post('/checkout', async (req, res, next) => {
       });
     });
 
+    logger.info(`[ORDER] Bestellung abgeschlossen: #${order.id} | Summe: ${order.totalAmount} € | Positionen: ${order.items?.length ?? 0}`);
     res.status(201).json({ status: 'success', message: 'Kauf abgeschlossen!', data: { order } });
   } catch (e: any) {
     if (e.message?.includes('nicht verfügbar')) return res.status(404).json({ status: 'fail', message: e.message });

@@ -1,4 +1,4 @@
-// Schlanker API-Client mit automatischer Token- und Cookie-Unterstützung
+// Schlanker API-Client mit automatischer Token- und Cookie-Unterstützung und detaillierten Fehlern
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
 async function req<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -13,7 +13,14 @@ async function req<T>(path: string, options: RequestInit = {}): Promise<T> {
   const json = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    throw new Error(json.message || json.errors?.[0]?.message || 'Anfrage fehlgeschlagen');
+    let errorMsg = json.message || 'Anfrage fehlgeschlagen';
+    if (json.errors && Array.isArray(json.errors) && json.errors.length > 0) {
+      const details = json.errors
+        .map((e: any) => `${e.path?.join('.') || 'Feld'}: ${e.message}`)
+        .join('; ');
+      errorMsg = `${json.message || 'Validierungsfehler'}: ${details}`;
+    }
+    throw new Error(errorMsg);
   }
   return json;
 }

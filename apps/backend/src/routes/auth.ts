@@ -6,6 +6,7 @@ import { Role } from '@prisma/client';
 import { db } from '../lib/db.js';
 import { JWT_SECRET } from '../lib/config.js';
 import { auth } from '../middleware/auth.js';
+import { logger } from '../lib/logger.js';
 
 export const authRouter = Router();
 
@@ -37,6 +38,7 @@ authRouter.post('/register', async (req, res, next) => {
       data: { name: b.name, email: b.email, passwordHash: await bcrypt.hash(b.password, 10) },
       select: { id: true, name: true, email: true, role: true },
     });
+    logger.info(`[AUTH] Neuer Benutzer registriert: ${user.name} (${user.email})`);
     res.status(201).json({ status: 'success', data: { user, token: sendSession(res, user) } });
   } catch (e) { next(e); }
 });
@@ -47,9 +49,11 @@ authRouter.post('/login', async (req, res, next) => {
     const b = loginSchema.parse(req.body);
     const u = await db.user.findUnique({ where: { email: b.email } });
     if (!u || !(await bcrypt.compare(b.password, u.passwordHash))) {
+      logger.warn(`[AUTH] Fehlgeschlagener Login-Versuch für E-Mail: ${b.email}`);
       return res.status(401).json({ status: 'fail', message: 'Falsche Anmeldedaten.' });
     }
     const user = { id: u.id, name: u.name, email: u.email, role: u.role };
+    logger.info(`[AUTH] Erfolgreicher Login: ${user.email} [Rolle: ${user.role}]`);
     res.json({ status: 'success', data: { user, token: sendSession(res, user) } });
   } catch (e) { next(e); }
 });
@@ -68,5 +72,6 @@ authRouter.get('/me', auth(), async (req, res, next) => {
 // Logout
 authRouter.post('/logout', (_, res) => {
   res.clearCookie('token');
+  logger.info('[AUTH] Benutzer abgemeldet');
   res.json({ status: 'success', message: 'Abgemeldet.' });
 });

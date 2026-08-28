@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Role } from '@prisma/client';
 import { db } from '../lib/db.js';
 import { auth } from '../middleware/auth.js';
+import { logger } from '../lib/logger.js';
 
 export const usersRouter = Router();
 
@@ -31,6 +32,7 @@ usersRouter.patch('/:id/role', auth([Role.ADMIN]), async (req, res, next) => {
       data: { role },
       select: { id: true, name: true, email: true, role: true },
     });
+    logger.info(`[USER] Rolle von ${user.email} auf ${user.role} geändert durch ${req.user?.email}`);
     res.json({ status: 'success', data: { user } });
   } catch (e) { next(e); }
 });

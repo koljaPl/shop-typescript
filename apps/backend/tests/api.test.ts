@@ -248,6 +248,23 @@ describe('TechShop API & RBAC Test-Suite', () => {
     assert.match(json.message, /nicht entziehen/);
   });
 
+  test('RBAC: Admin KANN System-Logs einsehen (200)', async () => {
+    const res = await fetch(`${BASE_URL}/system/logs`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    assert.equal(res.status, 200);
+    const json = await res.json();
+    assert.ok(Array.isArray(json.data.logs));
+    assert.ok(json.data.logs.length > 0);
+  });
+
+  test('RBAC: Mitarbeiter DARF System-Logs NICHT einsehen (403)', async () => {
+    const res = await fetch(`${BASE_URL}/system/logs`, {
+      headers: { Authorization: `Bearer ${employeeToken}` },
+    });
+    assert.equal(res.status, 403);
+  });
+
   test('Produkte: Löschen eines nicht existierenden Produkts liefert 404 (nicht 500)', async () => {
     const res = await fetch(`${BASE_URL}/products/nicht-vorhandene-id`, {
       method: 'DELETE',
