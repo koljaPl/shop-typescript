@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { Suspense } from 'react';
 import './globals.css';
 import { Providers } from '../components/providers';
 import { Navbar } from '../components/Navbar';
@@ -18,7 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <Providers>
           <div className="flex flex-col min-h-screen">
-            <Navbar />
+            <Suspense fallback={<div className="h-16 border-b border-zinc-200 bg-white" />}>
+              <Navbar />
+            </Suspense>
             <main className="flex-grow">{children}</main>
             <Footer />
           </div>

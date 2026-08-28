@@ -1,21 +1,31 @@
 'use client';
 
 // Produktkatalog mit minimalistischen Filtern und Sortierung
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Input, Skeleton } from '@heroui/react';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { ProductCard } from '../../components/ProductCard';
 import { Product } from '../../types';
 import { api } from '../../lib/api';
 
 const KATEGORIEN = ['Alle', 'Elektronik', 'Audio', 'Zubehör', 'Lifestyle'];
 
-export default function ProductsPage() {
+function ProductsContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [selectedCat, setSelectedCat] = useState('Alle');
   const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
+
+  const catParam = searchParams.get('cat');
+  const selectedCat = useMemo(() => {
+    if (!catParam) return 'Alle';
+    const found = KATEGORIEN.find((k) => k.toLowerCase() === catParam.toLowerCase());
+    return found || catParam;
+  }, [catParam]);
 
   useEffect(() => {
     api.get<{ data: { products: Product[] } }>('/products')
@@ -23,10 +33,23 @@ export default function ProductsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleSelectCat = (cat: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (cat === 'Alle') {
+      params.delete('cat');
+    } else {
+      params.set('cat', cat);
+    }
+    const query = params.toString() ? `?${params.toString()}` : '';
+    router.push(`/products${query}`);
+  };
+
   const filtered = useMemo(() => {
     let list = products.filter((p) => {
       const matchCat = selectedCat === 'Alle' || p.category.toLowerCase() === selectedCat.toLowerCase();
-      const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase());
+      const matchSearch =
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.description.toLowerCase().includes(search.toLowerCase());
       return matchCat && matchSearch;
     });
 
@@ -41,10 +64,12 @@ export default function ProductsPage() {
       <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-2 border-b border-zinc-200 pb-4">
         <div>
           <span className="text-[11px] font-mono tracking-widest text-zinc-400 uppercase">Sortiment</span>
-          <h1 className="text-3xl font-black tracking-tight text-zinc-950">Hardware-Katalog</h1>
+          <h1 className="text-3xl font-black tracking-tight text-zinc-950">
+            {selectedCat === 'Alle' ? 'Hardware-Katalog' : `Katalog // ${selectedCat}`}
+          </h1>
         </div>
         <span className="text-xs font-mono text-zinc-500">
-          {loading ? 'Lade Artikel...' : `${filtered.length} ${filtered.length === 1 ? 'Artikel' : 'Artikel'} verfügbar`}
+          {loading ? 'Lade Artikel...' : `${filtered.length} Artikel verfügbar`}
         </span>
       </div>
 
@@ -55,10 +80,10 @@ export default function ProductsPage() {
           {KATEGORIEN.map((cat) => (
             <button
               key={cat}
-              onClick={() => setSelectedCat(cat)}
+              onClick={() => handleSelectCat(cat)}
               className={`px-3.5 py-1.5 text-xs font-mono rounded-lg transition-all ${
-                selectedCat === cat
-                  ? 'bg-zinc-900 text-white font-bold'
+                selectedCat.toLowerCase() === cat.toLowerCase()
+                  ? 'bg-zinc-900 text-white font-bold shadow-xs'
                   : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/80 hover:text-black'
               }`}
             >
@@ -83,7 +108,7 @@ export default function ProductsPage() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="text-xs font-mono bg-zinc-100 border border-zinc-200 rounded-lg px-2.5 py-2 text-zinc-700 hover:border-zinc-400 transition-colors"
+            className="text-xs font-mono bg-zinc-100 border border-zinc-200 rounded-lg px-2.5 py-2 text-zinc-700 hover:border-zinc-400 transition-colors cursor-pointer"
           >
             <option value="default">Sortierung: Standard</option>
             <option value="price-asc">Preis: Aufsteigend</option>
@@ -114,5 +139,29 @@ export default function ProductsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
+        <div className="border-b border-zinc-200 pb-4">
+          <span className="text-[11px] font-mono tracking-widest text-zinc-400 uppercase">Sortiment</span>
+          <h1 className="text-3xl font-black tracking-tight text-zinc-950">Hardware-Katalog</h1>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-80 rounded-2xl border border-zinc-200 p-4 space-y-3">
+              <Skeleton className="rounded-xl h-44 bg-zinc-200" />
+              <Skeleton className="w-2/5 h-3 rounded bg-zinc-200" />
+              <Skeleton className="w-4/5 h-4 rounded bg-zinc-200" />
+            </div>
+          ))}
+        </div>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }

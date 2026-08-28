@@ -3,13 +3,15 @@
 // Minimalistische Navigationsleiste mit Brand-Identität und Status
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Button } from '@heroui/react';
 import { ShoppingBag, Shield, LogOut, User as UserIcon } from 'lucide-react';
 import { useAuthStore, useCartStore } from '../lib/store';
 
 export const Navbar: React.FC = () => {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, logout } = useAuthStore();
   const { getTotalItems, isHydrated } = useCartStore();
 
@@ -19,6 +21,11 @@ export const Navbar: React.FC = () => {
   }, [isHydrated, getTotalItems]);
 
   const isStaff = user?.role === 'EMPLOYEE' || user?.role === 'ADMIN';
+
+  const currentCat = searchParams.get('cat')?.toLowerCase();
+  const isKatalogActive = pathname === '/products' && !currentCat;
+  const isElektronikActive = pathname === '/products' && currentCat === 'elektronik';
+  const isAudioActive = pathname === '/products' && currentCat === 'audio';
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-zinc-200/80">
@@ -39,11 +46,38 @@ export const Navbar: React.FC = () => {
           </div>
         </Link>
 
-        {/* Links */}
+        {/* Desktop Links */}
         <nav className="hidden md:flex items-center gap-8 text-xs font-medium tracking-wide uppercase font-mono text-zinc-600">
-          <Link href="/products" className="hover:text-black transition-colors">Katalog</Link>
-          <Link href="/products?cat=Elektronik" className="hover:text-black transition-colors">Eingabe & Desk</Link>
-          <Link href="/products?cat=Audio" className="hover:text-black transition-colors">Akustik</Link>
+          <Link
+            href="/products"
+            className={`transition-colors py-1 ${
+              isKatalogActive
+                ? 'text-zinc-950 font-bold border-b-2 border-zinc-950'
+                : 'hover:text-black'
+            }`}
+          >
+            Katalog
+          </Link>
+          <Link
+            href="/products?cat=Elektronik"
+            className={`transition-colors py-1 ${
+              isElektronikActive
+                ? 'text-zinc-950 font-bold border-b-2 border-zinc-950'
+                : 'hover:text-black'
+            }`}
+          >
+            Eingabe & Desk
+          </Link>
+          <Link
+            href="/products?cat=Audio"
+            className={`transition-colors py-1 ${
+              isAudioActive
+                ? 'text-zinc-950 font-bold border-b-2 border-zinc-950'
+                : 'hover:text-black'
+            }`}
+          >
+            Akustik
+          </Link>
           {isStaff && (
             <Link
               href="/admin"
@@ -96,6 +130,43 @@ export const Navbar: React.FC = () => {
             )}
           </Link>
         </div>
+      </div>
+
+      {/* Mobile Navigationsleiste */}
+      <div className="md:hidden flex items-center gap-4 px-6 py-2 overflow-x-auto border-t border-zinc-100 text-xs font-mono font-medium tracking-wide uppercase bg-zinc-50/80 text-zinc-600">
+        <Link
+          href="/products"
+          className={`whitespace-nowrap transition-colors ${
+            isKatalogActive ? 'text-zinc-950 font-bold underline underline-offset-4' : 'hover:text-black'
+          }`}
+        >
+          Katalog
+        </Link>
+        <Link
+          href="/products?cat=Elektronik"
+          className={`whitespace-nowrap transition-colors ${
+            isElektronikActive ? 'text-zinc-950 font-bold underline underline-offset-4' : 'hover:text-black'
+          }`}
+        >
+          Eingabe & Desk
+        </Link>
+        <Link
+          href="/products?cat=Audio"
+          className={`whitespace-nowrap transition-colors ${
+            isAudioActive ? 'text-zinc-950 font-bold underline underline-offset-4' : 'hover:text-black'
+          }`}
+        >
+          Akustik
+        </Link>
+        {isStaff && (
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-1 text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 whitespace-nowrap"
+          >
+            <Shield size={11} />
+            <span>Backoffice</span>
+          </Link>
+        )}
       </div>
     </header>
   );
