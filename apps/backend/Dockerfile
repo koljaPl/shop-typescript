@@ -7,6 +7,7 @@ COPY package*.json ./
 RUN npm install
 
 COPY prisma ./prisma
+COPY prisma.config.ts ./
 RUN npx prisma generate
 
 COPY tsconfig.json ./
@@ -26,6 +27,7 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./
 
 EXPOSE 5000
 
